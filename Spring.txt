@@ -1,0 +1,96 @@
+First Dependency is require to In order to implement Spring security is --> spring-security-web
+
+groupId 
+org.springframework.security
+artifactId
+spring-security-web
+Version
+3.2.5 RELEASE
+Another Dependency that is required to add is -->spring-security-config
+(this will give us spring security namespace that actually
+we are using in the spring security XML configuration)
+
+groupId 
+org.springframework.security
+artifactId
+spring-security-config
+Version
+3.2.5 RELEASE
+
+In spring MVC our Dispacher Servlet is made to handle all the incoming http request which
+we configured in in web.xml file . Next In order to implemnt Spring security we will take 
+the advantage of Servlet filter which will be the first Interceptor for all the http in-coming 
+request.and this will be entry point to implement spring security.Let  us see how we can do it
+
+So First We need to define Filter Class in Web.xml 
+
+<filter>
+<filter-name>springSecuirtyfilterChain</filter-name>
+<filter-class>org.sf.web.filter.DelegatingFilterProxy</filter-class>
+</filter>
+
+and Next  we are suppose to define Filter Mapping
+
+<filter-mapping>
+<filter-name>springSecuirtyfilterChain</filter-name>
+<url-pattern>/*</url-pattern>(Here This will entrcept every url)
+</filter-mapping>
+
+Next is to define listener which will allow us to work with other application Context
+<listener>
+<listener-class>org.sf.web.context.ContextLoaderListerner</listener-class>
+</listener>
+
+and Add applicationContext for Spring Security related Configuration . In order to bootstrap 
+we define it into context - param
+
+<context-param>
+<param-name>contextConfigLocation</param-name>
+<param-value>/WEB-INF/config/myDemoApp-securityConfig.xml</param-value>
+</context-param>
+
+Now Next Step is to create the "myDemoApp-securityConfig.xml" file in /WEB-INF/config folder
+now next step is to provide name space for spring security in myDemoApp-securityConfig.xml
+xmlns:security="http://www.sf.org/schema/security"
+
+Now In order to provide basic in Memeory Authenticaton for Spring based application we need to 
+do some configuration in  myDemoApp-securityConfig.xml
+
+<security:http auto-config="true">--->This is for default settings
+<security:intercept-url pattern ="/**" access="ROLE_USER"/>
+</security:http>
+Since we are doing in Memeory Authenticaton so In oder to do it we are going to define valid user and role
+in myDemoApp-securityConfig.xml file . For that We use the tag <authentication-manager> </authentication-manager>
+In the authentication manager we are going to set <authentication provider> . Inside <authentication provider> we
+are using user-service tag where we are defing some valid user
+
+<security:authentication-manager>
+<security:authentication-provider>
+<security:user-service>
+<security:user name = "ANDY" password = "1234567" authorities="ROLE_USER"/>
+<security:user name = "ANN" password = "7654321" authorities="ROLE_TRIAL_USER"/>
+</security:user-service>
+</security:authentication-provider>
+ </<security:authentication-manager>
+
+now we are done for In Memeory Authenticaton and Now if you run the application you will be intercepted and 
+spring will provide you login page and then you can access this application.
+
+--------------------------------------------------------------
+
+Next we are going to how We can implement http basic authentication 
+---------------------------------------------------------------------
+Earlier we have seen Spring is providing default login form InOrder to access the application.
+Now will see how we can implement http basic authentication for that only we need to add 
+
+<security:http auto-config="true">--->This is for default settings
+<security:intercept-url pattern ="/**" access="ROLE_USER"/>
+<security:http-basic/>------> this the only additional thing required and we are done
+</security:http>
+
+
+
+
+
+
+
