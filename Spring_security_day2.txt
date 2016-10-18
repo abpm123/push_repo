@@ -1,0 +1,97 @@
+2nd day
+
+Authentication of Spring security using data base
+steps require to acomplish the task :
+
+configure the data source ----> Create data access object(org.sf.security.core.userdetails.jdbc.JdbcDaoImpl)
+
+Setup authentication provider with data access object.
+
+User Scheam
+
+User Table (column--username,password,enabled) here username is the primary key for the table and enable is boolean field
+indicates whether the user is enabled or disabled
+
+then we require another table called Authorities Table which has two columns
+
+username
+and authority where username is foreign key pointing to username of User table for data base authentication we need to do 
+some changes in our application context file  add bean for data source
+
+
+<security:http auto-config="true">--->This is for default settings
+<security:intercept-url pattern ="/**" access="ROLE_USER"/>
+</security:http>
+<security:authentication-manager>
+<security:authentication-provider user-service-ref="myUserDetailsService">
+
+</security:authentication-provider>
+</<security:authentication-manager>
+
+<bean id ="dataSource" class = "org.sf.jdbc.datasource.DriverManagerDataSource">
+<property name = "driverClassName" value = "com.mysql.jdbc.Driver/>
+<property name = "url" value = "jdbc:mysql://localhost:3306/springdemodb"/>
+<property name = "username" value = "admin"/>
+<property name = "password" value = "admin"/>
+</bean>
+
+
+now our datasource are in place next thing is to do is to create data access object . In order to do it 
+we need to create a new bean that will make use of our datasource object
+
+<bean id ="myUserDetailsService" class = "org.sf.security.core.userDetails.jdbc.JdbcDaoImpl">
+<property name = "dataSource" ref = "dataSource"/>
+</bean></beans>
+
+Next thing taht we are  going to modify is authentication provider once it is done our modified file will look like below 
+file
+
+<security:http auto-config="true">--->This is for default settings
+<security:intercept-url pattern ="/**" access="ROLE_USER"/>
+</security:http>
+         
+<security:authentication-manager>
+<security:authentication-provider user-service-ref="myUserDetailsService">
+
+</security:authentication-provider>
+</<security:authentication-manager>
+
+<bean id ="dataSource" class = "org.sf.jdbc.datasource.DriverManagerDataSource">
+<property name = "driverClassName" value = "com.mysql.jdbc.Driver/>
+<property name = "url" value = "jdbc:mysql://localhost:3306/springdemodb"/>
+<property name = "username" value = "admin"/>
+<property name = "password" value = "admin"/>
+</bean>
+<bean id ="myUserDetailsService" class = "org.sf.security.core.userDetails.jdbc.JdbcDaoImpl">
+<property name = "dataSource" ref = "dataSource"/>
+</bean></beans>
+
+that is all . save and run the application now it will validate through database  instead of 
+in memeory validation
+
+To minimize the configuration we can eliminate some of the thing like creating data acess object 
+let us see how ..
+
+
+<security:http auto-config="true">--->This is for default settings
+<security:intercept-url pattern ="/**" access="ROLE_USER"/>
+</security:http>
+
+
+<security:authentication-manager>
+
+<security:authentication-provider
+ <security:jdbc-user-service data-source-ref="dataSource">
+</security:authentication-provider>
+
+</<security:authentication-manager>
+
+<bean id ="dataSource" class = "org.sf.jdbc.datasource.DriverManagerDataSource">
+<property name = "driverClassName" value = "com.mysql.jdbc.Driver/>
+<property name = "url" value = "jdbc:mysql://localhost:3306/springdemodb"/>
+<property name = "username" value = "admin"/>
+<property name = "password" value = "admin"/>
+</bean>
+</beans>
+
+that's all .every thing now will be going to happen behind the scene
