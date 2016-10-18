@@ -19,6 +19,7 @@ and authority where username is foreign key pointing to username of User table f
 some changes in our application context file  add bean for data source
 
 
+
 <security:http auto-config="true">--->This is for default settings
 <security:intercept-url pattern ="/**" access="ROLE_USER"/>
 </security:http>
@@ -95,3 +96,109 @@ let us see how ..
 </beans>
 
 that's all .every thing now will be going to happen behind the scene
+
+
+
+----------------------------------------------------------------------
+Spring security and database encrypted passwords
+
+It is not a great idea to store password in plain text . We can use spring feature which we can use to 
+encrypt and encode passwords
+
+Spring Security classes for(Encoding/Encrypting)
+
+MD5
+org.sf.security.authentication.encoding.MD5PassowrdEncoder
+By Using MD5 We will See how we can encode our password 
+
+@component
+public class PasswordDemo{
+
+	public String getMD5Hash(String plainText){
+		
+		MD5PasswordEncoder encoder = new MD5PasswordEncoder();
+		String encrypted = encoder.encodePassword(plainText,null);
+		s.o.p("password encoded with MD5 = " + encrypted );
+                return encrypted;
+
+}
+
+}
+
+Create test class App Demo : 
+
+public class AppDemo{
+
+PSVM(String args[]){
+Applicationcontext appcontext = new ClassPathXmlApplicationContext("");
+PasswordDemo demo = (PasswordDemo)appcontext.getBean("passwordDemo",PasswordDemo.class);
+demo.getMD5Hash("123456");((ClassPathXmlApplicationContext)appcontext).close();
+
+}
+
+}
+To Accomplish this we are required to do one small change in our spring securityConfiguration file
+
+
+same algoritham we can apply for user password and we can store that encreypted string in our database
+<security:http auto-config="true">--->This is for default settings
+<security:intercept-url pattern ="/**" access="ROLE_USER"/>
+</security:http>
+
+
+<security:authentication-manager>
+
+<security:authentication-provider>
+//here we need to set password encoder and we are done
+
+<security:password-encoder hash ="md5"/>
+
+ <security:jdbc-user-service data-source-ref="dataSource">
+</security:authentication-provider>
+
+</<security:authentication-manager>
+
+<bean id ="dataSource" class = "org.sf.jdbc.datasource.DriverManagerDataSource">
+<property name = "driverClassName" value = "com.mysql.jdbc.Driver/>
+<property name = "url" value = "jdbc:mysql://localhost:3306/springdemodb"/>
+<property name = "username" value = "admin"/>
+<property name = "password" value = "admin"/>
+</bean>
+</beans>
+
+
+
+
+SHA
+org.sf.security.authentication.encoding.ShaPassowrdEncoder;
+
+BCrypt(recommended)
+org.sf.security.crypto.bcrypt.encoding.BCryptPassowrdEncoder;
+
+
+@component
+public class PasswordDemo{
+
+	public String getBcryptHash(String plainText){
+		
+		BcryptPasswordEncoder encoder = new BcryptPasswordEncoder();
+		String encrypted = encoder.encodePassword(plainText,null);
+		s.o.p("password encoded with Bcrypt= " + encrypted );
+                return encrypted;
+
+}
+
+}
+
+<security:authentication-manager>
+
+<security:authentication-provider>
+//here we need to set password encoder and we are done
+
+<security:password-encoder hash ="bcrypt"/>---> this the only change is required!!!
+
+ <security:jdbc-user-service data-source-ref="dataSource">
+</security:authentication-provider>
+
+</<security:authentication-manager>
+

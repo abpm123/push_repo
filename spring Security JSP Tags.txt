@@ -1,0 +1,21 @@
+Getting familiar With spring Security JSP Tags
+
+Dependencies
+
+<dependency>
+<groupId>org.sf.security</groupId>
+<artifactId>spring-security-taglibs </artifactId>
+<version>3.2.5.RELEASE</version>
+
+and JSP Declaration add the below tag inoder to use it
+
+<%@ taglib prefix ="sec" uri ="http://www.sf.org/security/tags" %>
+
+Tags
+
+authorize tag----> which content is authorised
+authentication tag 
+
+accesscontrollist tag
+
+
