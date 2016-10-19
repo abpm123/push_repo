@@ -1,0 +1,321 @@
+Getting familiar With spring Security JSP Tags
+
+Dependencies
+
+
+
+<dependency>
+
+<groupId>org.sf.security</groupId>
+
+<artifactId>spring-security-taglibs </artifactId>
+
+<version>3.2.5.RELEASE</version>
+
+
+and JSP Declaration add the below tag inoder to use it
+
+
+<%@ taglib prefix ="sec" uri ="http://www.sf.org/security/tags" %>
+
+
+Tags
+
+
+authorize tag----> which content is authorised
+
+authentication tag 
+
+accesscontrollist tag
+
+to use the below we need 
+
+<%@ taglib prefix ="c" uri="http://java.sun.com/jsp/jstl/core %>\
+<%@ taglib prefix ="sec" uri="http://www.springframework.org/security/tags %>
+
+how to use authentication tag in our JSP : We already have imported our spring authentication
+tag then only we need to do is that 
+<p> welcome <sec:authentication property = "name"/></p>
+
+suppose we to hide a link based on authorites that also can be done
+<sec:authorize ifAnyGranted="ROLE_ADMIN">
+<a href ="addFood">Add a food on the list</a>
+</sec:authorize>
+
+-------------------------------------------------------------
+Next we will lean insteadof sending spring provided login page to end user 
+we can customize that too by customizing login page 
+
+Customizing spring security
+<beans>
+ <security:http>
+ </security:http>
+</beans>
+Login page 
+
+<security:form-login login-page='/login'/>
+
+logout Page
+
+<security :logout logout-success-url='/logout'/>
+
+if we have any authentication failure that also we can redirect to some page 
+authentication  error :
+
+<security:form-login login-page='/login' authentication-failure-url="..."/>
+
+Next we will see how to provide our custom login page :
+
+<security:http auto-config="true">
+<security:intercept-url pattern="/**" access = "ROLE_USER"/> This only restricted to user with role ="ROLE_USER"
+<security:form-login login-page='/Login.jsp' default-target-url="/home"/> once the login is success then redirected to home.jsp
+</security:http>
+
+but if want to display the login page to anonymous user that can also be done :by adding on above 
+
+<security:http auto-config="true">
+<security:intercept-url pattern="/Login.jsp" access = "IS_AUTHENTICATED_ANONYMOUSLY"/> 
+<security:intercept-url pattern="/**" access = "ROLE_USER"/> This only restricted to user with role ="ROLE_USER"
+<security:form-login login-page='/Login.jsp' default-target-url="/home"/> once the login is success then redirected to home.jsp
+</security:http>
+
+Next is to create login.jsp page :
+<html>
+<head>
+<title> My custome Login Page </title>
+</head>
+<body>
+	<h1> welcome to this Demo apps Custom Login page </h1>
+	<form action="j_spring_security_check" name="myForm" method="POST>
+	Whats your username?<input type="text" name="j_username" value=""/>
+        Whats your password?<input type="password" name="j_password"/>
+	<input type="submit" name="submit" value="Get started"/>
+</form>
+</body>
+</html>
+
+Next step is save this page and restart the server we will have the custom login page 
+insteadof default login page : The above login page have some problem like we can do 
+some additional thing like if want to dispaly some information we can not do so we will
+try to use spring MODELVIEW with the help spring MVC let us see how we can do that.
+
+here will remome the .jsp extension and we will retrun model and view by using spring 
+mvc controller and will have handler mapping  method for this
+
+
+<security:http auto-config="true">
+<security:intercept-url pattern="/Login" access = "IS_AUTHENTICATED_ANONYMOUSLY"/> 
+<security:intercept-url pattern="/**" access = "ROLE_USER"/> This only restricted to user with role ="ROLE_USER"
+<security:form-login login-page='/Login' default-target-url="/home"/> once the login is success then redirected to home.jsp
+</security:http>
+
+next step is to create a controller called LoginController and In the login controller we are
+going to define handler method which will handle url with '/Login'
+
+@Controller
+public class LoginController{
+@RequestMapping(value="/login",method="REQUESTMETHOD.GET")
+public String login(Model model){
+ s.o.p("Login Handeler is running");
+String randomMessageOfTheDay="Keep it Up!";
+model.addAttribute("randomMessageOfTheDay",randomMessageOfTheDay);
+return "login"
+} 
+
+
+Next step is to set our view resolver to look for login.jsp in "WEB-INF/jsp/"--inside of jsp filder in web-inf
+
+<html>
+<head>
+<title> My custome Login Page </title>
+</head>
+<body>
+	<h1> welcome to this Demo apps Custom Login page </h1>
+
+		<p> ${randomMessageOfTheDay}</p>--//-this is to accessing model attribute that was not possibe through above
+
+	<form action="j_spring_security_check" name="myForm" method="POST>
+	Whats your username?<input type="text" name="j_username" value=""/>
+        Whats your password?<input type="password" name="j_password"/>
+	<input type="submit" name="submit" value="Get started"/>
+</form>
+</body>
+</html>
+
+
+-------------------------------------------------------------------------------------------------------------------
+
+Indicating Authentication error  on custom Login Page  like in above login page if we will login with incorrect
+credentials then It will not show any user indication for failure.This is the page where we need to palce some 
+indication for the user of authentication failure
+
+<security:http auto-config="true">
+<security:intercept-url pattern="/login" access = "IS_AUTHENTICATED_ANONYMOUSLY"/> 
+<security:intercept-url pattern="/loginFail" access = "IS_AUTHENTICATED_ANONYMOUSLY"/> 
+<security:intercept-url pattern="/**" access = "ROLE_USER"/> This only restricted to user with role ="ROLE_USER"
+<security:form-login login-page='/login.jsp' default-target-url="/home" authentication-failure-url="/loginFail" /> once the login is success then redirected to home.jsp
+</security:http>
+
+
+Next is to go to Controller and add one handlerMapping for loginFail Url
+
+@Controller
+public class LoginController{
+@RequestMapping(value="/login",method="REQUESTMETHOD.GET")
+public String login(Model model){
+ s.o.p("Login Handeler is running");
+String randomMessageOfTheDay="Keep it Up!";
+model.addAttribute("randomMessageOfTheDay",randomMessageOfTheDay);
+return "login"
+
+@RequestMapping(value="/loginFail",method="REQUESTMETHOD.GET")
+public String login(Model model){
+ s.o.p("Login fail is running");
+model.addAttribute("errorMessage","oops there is a problem with login");
+return "login"
+
+} 
+
+
+Next is to setup conditional massage to show the message on the page we will use jstl tag library to 
+dispaly the conditional statements
+
+<%@ taglib prefix ="c" uri="http://java.sun.com/jsp/jstl/core %>
+<html>
+<head>
+<title> My custome Login Page </title>
+</head>
+<body>
+	<h1> welcome to this Demo apps Custom Login page </h1>
+
+		<c:if test="${not empty errorMessage}">
+<p>${errorMessage}</p></c:if>
+
+		<p> ${randomMessageOfTheDay}</p>--//-this is to accessing model attribute that was not possibe through above
+
+	<form action="j_spring_security_check" name="myForm" method="POST>
+	Whats your username?<input type="text" name="j_username" value=""/>
+        Whats your password?<input type="password" name="j_password"/>
+	<input type="submit" name="submit" value="Get started"/>
+</form>
+</body>
+</html>
+
+
+------------------------------------------------------------------------------------------------
+
+adding logout functionality by using spring Security  
+
+1 . modify the springScurityapplicationcontext for the logout
+
+	<security:http auto-config="true">
+<security:intercept-url pattern="/login" access = "IS_AUTHENTICATED_ANONYMOUSLY"/>
+ 
+<security:intercept-url pattern="/loginFail" access = "IS_AUTHENTICATED_ANONYMOUSLY"/> 
+
+<security:intercept-url pattern="/logout" access = "IS_AUTHENTICATED_ANONYMOUSLY"/> 
+
+<security:intercept-url pattern="/**" access = "ROLE_USER"/> This only restricted to user with role ="ROLE_USER"
+
+<security:form-login login-page='/login.jsp' default-target-url="/home" authentication-failure-url="/loginFail" /> once the login is success then redirected to home.jsp
+
+<security:logout logout-success-url='/logout' />//This line should be added for logout 
+
+</security:http>
+
+2. Modify the controller and add one handlermethod for logout 
+
+
+@Controller
+public class LoginController{
+@RequestMapping(value="/login",method="REQUESTMETHOD.GET")
+public String login(Model model){
+ s.o.p("Login Handeler is running");
+String randomMessageOfTheDay="Keep it Up!";
+model.addAttribute("randomMessageOfTheDay",randomMessageOfTheDay);
+return "login"
+
+@RequestMapping(value="/loginFail",method="REQUESTMETHOD.GET")
+public String loginFail(Model model){
+ s.o.p("Login fail is running");
+model.addAttribute("errorMessage","oops there is a problem with login");
+return "login"
+
+} 
+
+
+@RequestMapping(value="/logout",method="REQUESTMETHOD.GET")
+public String logout(Model model){
+ s.o.p("Login fail is running");
+model.addAttribute("logoutMessage","Thanks for using our application .see you next time");
+return "logout"
+
+} 
+
+Next step is to create a logout.jsp page inside of your web-inf/jsp/ folder
+
+
+<%@ taglib prefix ="c" uri="http://java.sun.com/jsp/jstl/core %>
+<html>
+<head>
+<title> logout </title>
+</head>
+<body>
+			<p> ${logoutMessage}</p>
+<a href="login">login</a>
+</body>
+</html>
+
+After that you put logout link to you home page
+for that yow write the below tag in ur home page
+
+<a href="j_spring_security_logout">logout</a>
+
+---------------------------------------------------------------------
+
+Access Controll using expression
+
+Expression can secure URLs, Methods
+
+In Order to use that we are going to set up in <security:http> user-expressions="true"
+
+some common expression are 
+
+hasRole or (hasAuthority)
+hasAnyRole or (hasAnyAuthority)
+permitAll
+denyAll
+hasPermission
+
+
+1 . modify the springScurityapplicationcontext for the logout
+
+	<security:http auto-config="true" user-expressions="true"> //to enable the expression
+<security:intercept-url pattern="/login" access = "permitAll"/> // permit All to login page
+ 
+<security:intercept-url pattern="/loginFail" access = "permitAll"/> 
+
+<security:intercept-url pattern="/logout" access = "permitAll"/> 
+
+<security:intercept-url pattern="/addFood" access = "hasRole('ROLE_ADMIN')"/> // here we have restricted url "addFood" To ADMIN ONLY
+
+<security:intercept-url pattern="/**" access = "hasRole('ROLE_USER')"/> This only restricted to user with role ="ROLE_USER"
+
+<security:form-login login-page='/login.jsp' default-target-url="/home" authentication-failure-url="/loginFail" /> once the login is success then redirected to home.jsp
+
+<security:logout logout-success-url='/logout' />//This line should be added for logout 
+
+</security:http>
+
+we are done start the app and test the applicatin
+
+
+How To use methode level restriction
+
+we have to edit our applicationcontext where we bascilly declaring controlleror or model class
+
+add <security:global-method-security pre-post-annotations="enabled"/>
+
+and the annotate method as 
+
+@preAuthorize("hasRole('ROLE_ADMIN')")
